@@ -1,0 +1,167 @@
+
+/* Style global */
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f8f9fa;
+    font-family: Arial, sans-serif;
+    margin: 0;
+}
+
+/* Conteneur principal */
+.container {
+    width: 400px;
+    padding: 20px;
+    background: white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    text-align: center;
+}
+
+/* Conteneur debug */
+.container-debug {
+    width: 1000px;
+    padding: 20px;
+    background: white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    text-align: center;
+}
+
+
+
+/* Titre */
+h1 {
+    font-size: 20px;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* Style de la dropzone */
+.dropzone {
+    width: 100%;
+    height: 200px;
+    border: 2px dashed #007bff;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: #007bff;
+    cursor: pointer;
+    background-color: #fff;
+    transition: background-color 0.3s ease-in-out;
+}
+
+/* Effet quand on survole la dropzone */
+.dropzone.dragover {
+    background-color: #e0f0ff;
+}
+
+/* Nom du fichier sélectionné */
+#fileName {
+    margin-top: 15px;
+    font-size: 14px;
+    color: #333;
+}
+
+
+h2 {
+    font-size: 18px;
+    color: #007bff;
+    margin-top: 20px;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 5px;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+ul li {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    margin: 10px 0;
+}
+
+.file-time {
+    font-size: 14px;
+    font-weight: bold;
+    color: #555;
+    width: 50px;
+    text-align: right;
+    margin-right: 10px;
+}
+
+ul li a {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+ul li a:hover {
+    color: #0056b3;
+}
+
+
+/* Boutons */
+.btn-primary {
+    background-color: #007bff; 
+    color: white;
+    border: none;
+    padding: 10px 20px; 
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 123, 255, 0.2);
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-secondary {
+    background-color: #ddd;  /* 🆕 Gris clair pour le rendre moins attractif */
+    color: #555;
+    border: none;
+    padding: 10px 15px;  /* 🆕 Légèrement plus petit */
+    font-size: 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background-color: #bbb;  /* 🆕 Gris foncé au survol */
+}
+
+.button-group {
+    display: flex;
+    justify-content: center;
+    gap: 10px;  /* 🆕 Ajout d'un espacement entre les boutons */
+}
+
+.debug-output {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.debug-output pre {
+    background: #e9ecef;
+    padding: 10px;
+    border-radius: 5px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+#csvTable {
+    padding-bottom: 30px;
+}

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Résultat Debug</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container-debug">
+        {% include 'header.html' %}
+        <h1>Édition du CSV</h1>
+
+        <!-- 🔹 Partie dynamique : Affichage des fichiers générés -->
+        <table id="csvTable">
+            <thead>
+                <tr id="headerRow"></tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+        <div class="button-group">
+            <button class="btn-primary" onclick="saveCsv()">Enregistrer les modifications</button>
+        </div>
+
+        
+        <!-- 🔹 Partie statique : Explication de l'outil -->
+        <div class="documentation">
+            <h2>Comment utiliser l'application ?</h2>
+            <p>1. Déposez un fichier PDF sur la page principale.</p>
+            <p>3. Choisissez "Debug" pour voir comment le fichier est transformé.</p>
+            <p>4. La section ci-dessus vous montre les données lues dans le BL.</p>
+            <p>4. Modifiez le tableau ci-dessus de sorte que toutes les informations soient correctes</p>
+            <p>4. Enregistrez les modifications</p>
+        </div>
+    </div>
+
+    <script>
+        let csvData = `{{ csv_content | safe }}`.trim();
+
+        function generateTable(csv) {
+            const tableBody = document.getElementById("tableBody");
+            const headerRow = document.getElementById("headerRow");
+
+            tableBody.innerHTML = "";
+            headerRow.innerHTML = "";
+
+            let rows = csv.split("\n").map(row => row.split(","));
+
+            // 🔹 Création de la 1ère ligne comme en-tête
+            rows[0].forEach(col => {
+                let th = document.createElement("th");
+                th.textContent = col;
+                headerRow.appendChild(th);
+            });
+
+            // 🔹 Création des autres lignes
+            rows.slice(1).forEach((row, rowIndex) => {
+                let tr = document.createElement("tr");
+
+                row.forEach(cell => {
+                    let td = document.createElement(rowIndex === 1 ? "th" : "td"); // 🆕 3ème ligne = <th> au lieu de <td>
+                    td.textContent = cell;
+
+                    if (rowIndex === 1) {
+                        td.style.fontWeight = "bold"; // 🆕 Mise en gras pour la 3ème ligne (index 2 du CSV)
+                    } else {
+                        td.contentEditable = "true"; // 🆕 Toutes les autres cellules restent modifiables
+                    }
+
+                    tr.appendChild(td);
+                });
+
+                tableBody.appendChild(tr);
+            });
+        }
+
+
+        function saveCsv() {
+            let newCsvData = [];
+            
+            // 🔹 Récupérer la première ligne d'en-tête
+            let headerCells = document.querySelectorAll("#headerRow th");
+            let headerRow = Array.from(headerCells).map(cell => cell.textContent);
+            newCsvData.push(headerRow.join(",")); // 🆕 Ajoute l'en-tête
+
+            // 🔹 Récupérer toutes les lignes du tableau
+            const rows = document.querySelectorAll("#tableBody tr");
+
+            rows.forEach(row => {
+                let rowData = [];
+                row.querySelectorAll("td, th").forEach(cell => { // 🆕 Inclure aussi les <th>
+                    rowData.push(cell.textContent);
+                });
+                newCsvData.push(rowData.join(",")); // 🆕 Ajoute chaque ligne correctement formatée
+            });
+
+            fetch("/update_csv", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    filename: "{{ csv_filename }}",
+                    content: newCsvData.join("\n")
+                })
+            }).then(response => {
+                if (response.ok) {
+                    alert("Modifications enregistrées !");
+                } else {
+                    alert("Erreur lors de l'enregistrement.");
+                }
+            });
+        }
+
+
+        generateTable(csvData);
+    </script>
+</body>
+</html>
