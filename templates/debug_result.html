@@ -10,7 +10,7 @@
         {% include 'header.html' %}
         <h1>Édition du CSV</h1>
 
-        <!-- 🔹 Partie dynamique : Affichage des fichiers générés -->
+        <!-- Partie dynamique : Affichage du tableau de données modifiables -->
         <table id="csvTable">
             <thead>
                 <tr id="headerRow"></tr>
@@ -22,20 +22,22 @@
         </div>
 
         
-        <!-- 🔹 Partie statique : Explication de l'outil -->
+        <!-- Partie statique : Documentation -->
         <div class="documentation">
-            <h2>Comment utiliser l'application ?</h2>
-            <p>1. Déposez un fichier PDF sur la page principale.</p>
-            <p>3. Choisissez "Debug" pour voir comment le fichier est transformé.</p>
-            <p>4. La section ci-dessus vous montre les données lues dans le BL.</p>
-            <p>4. Modifiez le tableau ci-dessus de sorte que toutes les informations soient correctes</p>
-            <p>4. Enregistrez les modifications</p>
+            <h2>Comment entrainer l'IA sur un nouveau fournisseur ?</h2>
+            <p>1. Déposez un BL au format PDF sur la page principale.</p>
+            <p>2. Choisissez "Debug" pour voir comment le fichier est transformé.</p>
+            <p>3. La section ci-dessus vous montre les données lues dans le BL, celles-ci contiennent probablement des erreurs, corrigez-les.</p>
+            <p>5. Enregistrez les modifications</p>
+            <p>Vous arrivez alors sur une nouvelle page</p>
+            <p>6. Copiez le contenu intitulé "entrée" et "sortie" dans les boites correspondante sur le site de mistralAI</p>
         </div>
     </div>
 
     <script>
         let csvData = `{{ csv_content | safe }}`.trim();
 
+        // Génère le tableau issu du CSV avec les données modifiables
         function generateTable(csv) {
             const tableBody = document.getElementById("tableBody");
             const headerRow = document.getElementById("headerRow");
@@ -45,25 +47,25 @@
 
             let rows = csv.split("\n").map(row => row.split(","));
 
-            // 🔹 Création de la 1ère ligne comme en-tête
+            // Création de la 1ère ligne comme en-tête
             rows[0].forEach(col => {
                 let th = document.createElement("th");
                 th.textContent = col;
                 headerRow.appendChild(th);
             });
 
-            // 🔹 Création des autres lignes
+            // Création des autres lignes
             rows.slice(1).forEach((row, rowIndex) => {
                 let tr = document.createElement("tr");
 
                 row.forEach(cell => {
-                    let td = document.createElement(rowIndex === 1 ? "th" : "td"); // 🆕 3ème ligne = <th> au lieu de <td>
+                    let td = document.createElement(rowIndex === 1 ? "th" : "td"); // 3ème ligne = <th> au lieu de <td>
                     td.textContent = cell;
 
                     if (rowIndex === 1) {
-                        td.style.fontWeight = "bold"; // 🆕 Mise en gras pour la 3ème ligne (index 2 du CSV)
+                        td.style.fontWeight = "bold"; // Mise en gras pour la 3ème ligne (index 2 du CSV)
                     } else {
-                        td.contentEditable = "true"; // 🆕 Toutes les autres cellules restent modifiables
+                        td.contentEditable = "true"; // Toutes les autres cellules restent modifiables
                     }
 
                     tr.appendChild(td);
@@ -73,24 +75,22 @@
             });
         }
 
-
+        // Enregistre les modifications du tableau dans le CSV
         function saveCsv() {
             let newCsvData = [];
             
-            // 🔹 Récupérer la première ligne d'en-tête
             let headerCells = document.querySelectorAll("#headerRow th");
             let headerRow = Array.from(headerCells).map(cell => cell.textContent);
-            newCsvData.push(headerRow.join(",")); // 🆕 Ajoute l'en-tête
+            newCsvData.push(headerRow.join(",")); 
 
-            // 🔹 Récupérer toutes les lignes du tableau
             const rows = document.querySelectorAll("#tableBody tr");
 
             rows.forEach(row => {
                 let rowData = [];
-                row.querySelectorAll("td, th").forEach(cell => { // 🆕 Inclure aussi les <th>
+                row.querySelectorAll("td, th").forEach(cell => { 
                     rowData.push(cell.textContent);
                 });
-                newCsvData.push(rowData.join(",")); // 🆕 Ajoute chaque ligne correctement formatée
+                newCsvData.push(rowData.join(","));
             });
 
             fetch("/update_csv", {
