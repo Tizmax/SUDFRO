@@ -1,14 +1,9 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Résultat Debug</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
+{% include 'head.html' %}
 <body>
     <div class="container-debug">
-    <h2>Fichier Debug :</h2>
+    <h1>Fichiers extraits</h2>
 
     <div>
         <h3>Contenu d'entrée</h3>
@@ -21,16 +16,7 @@
         <button class="btn-secondary" onclick="copyToClipboard('csvContent')">Copier</button>
     </div>
 
-    <div class="button-group"><button class="btn-primary" onclick="window.location.href='/';">Terminé</button></div>
+    <button class="btn-primary" onclick="window.location.href='/';">Terminé</button>
 </div>
-
-    <script>
-        function copyToClipboard(elementId) {
-            let textarea = document.getElementById(elementId);
-            textarea.select();
-            document.execCommand("copy");
-            alert("Copié dans le presse-papier !");
-        }
-    </script>
 </body>
 </html>

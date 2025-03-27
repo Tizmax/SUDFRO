@@ -1,13 +1,8 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Résultat Debug</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
+{% include 'head.html' %}
 <body>
     <div class="container-debug">
-        {% include 'header.html' %}
         <h1>Édition du CSV</h1>
 
         <!-- Partie dynamique : Affichage du tableau de données modifiables -->
@@ -24,81 +19,6 @@
 
     <script>
         let csvData = `{{ csv_content | safe }}`.trim();
-
-        // Génère le tableau issu du CSV avec les données modifiables
-        function generateTable(csv) {
-            const tableBody = document.getElementById("tableBody");
-            const headerRow = document.getElementById("headerRow");
-
-            tableBody.innerHTML = "";
-            headerRow.innerHTML = "";
-
-            let rows = csv.split("\n").map(row => row.split(","));
-
-            // Création de la 1ère ligne comme en-tête
-            rows[0].forEach(col => {
-                let th = document.createElement("th");
-                th.textContent = col;
-                headerRow.appendChild(th);
-            });
-
-            // Création des autres lignes
-            rows.slice(1).forEach((row, rowIndex) => {
-                let tr = document.createElement("tr");
-
-                row.forEach(cell => {
-                    let td = document.createElement(rowIndex === 1 ? "th" : "td"); // 3ème ligne = <th> au lieu de <td>
-                    td.textContent = cell;
-
-                    if (rowIndex === 1) {
-                        td.style.fontWeight = "bold"; // Mise en gras pour la 3ème ligne (index 2 du CSV)
-                    } else {
-                        td.contentEditable = "true"; // Toutes les autres cellules restent modifiables
-                    }
-
-                    tr.appendChild(td);
-                });
-
-                tableBody.appendChild(tr);
-            });
-        }
-
-        // Enregistre les modifications du tableau dans le CSV
-        function saveCsv() {
-    let newCsvData = [];
-    
-    let headerCells = document.querySelectorAll("#headerRow th");
-    let headerRow = Array.from(headerCells).map(cell => cell.textContent);
-    newCsvData.push(headerRow.join(",")); 
-
-    const rows = document.querySelectorAll("#tableBody tr");
-
-    rows.forEach(row => {
-        let rowData = [];
-        row.querySelectorAll("td, th").forEach(cell => { 
-            rowData.push(cell.textContent);
-        });
-        newCsvData.push(rowData.join(","));
-    });
-
-    fetch("/update_csv", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            filename: "{{ csv_filename }}",  // ✅ Vérifie que cette valeur est bien transmise par le backend
-            content: newCsvData.join("\n")
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.location.href = "/debug_final"; // ✅ Redirection sans paramètre
-        } else {
-            alert("Erreur lors de l'enregistrement du CSV");
-        }
-    });
-}
-
 
         generateTable(csvData);
     </script>
