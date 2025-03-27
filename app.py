@@ -106,10 +106,8 @@ def debug_file():
 @app.route("/debug_result")
 def debug_result_page():
     csv_file = "debug.csv"
-    txt_file = "debug.txt"
 
     csv_content = ""
-    txt_content = ""
 
     # Charger le contenu du CSV et TXT
     try:
@@ -118,34 +116,34 @@ def debug_result_page():
     except:
         csv_content = "Impossible de charger le fichier CSV."
 
-    try:
-        with open(os.path.join(DEBUG_FOLDER, txt_file), "r", encoding="utf-8") as f:
-            txt_content = f.read()
-    except:
-        txt_content = "Impossible de charger le fichier TXT."
-
-    return render_template("debug_result.html", csv_content=csv_content, txt_content=txt_content, csv_filename=csv_file)
+    return render_template("debug_result.html", csv_content=csv_content, csv_filename=csv_file)
 
 # 🔄️ Applique les modifications au fichier CSV
 @app.route("/update_csv", methods=["POST"])
 def update_csv():
     data = request.get_json()
-    filename = data.get("filename")
     content = data.get("content")
 
-    if not filename or not content:
-        return jsonify({"error": "Données manquantes"}), 400
-
+    filename = "debug.csv"
     file_path = os.path.join(DEBUG_FOLDER, filename)
     
-    try:
-        with open(file_path, "w", encoding="utf-8") as f:
-            f.write(content)
-        return jsonify({"message": "Fichier mis à jour avec succès"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    with open(file_path, "w", encoding="utf-8") as f:
+        f.write(content)
+
+    return jsonify({"success": True})
     
-    
+@app.route('/debug_final')
+def debug_final():
+    filename = "debug.csv"  
+
+    csv_path = os.path.join(DEBUG_FOLDER, filename)
+    txt_path = csv_path.replace(".csv", ".txt")
+
+    csv_content = open(csv_path, "r", encoding="utf-8").read() if os.path.exists(csv_path) else "Fichier CSV introuvable"
+    txt_content = open(txt_path, "r", encoding="utf-8").read() if os.path.exists(txt_path) else "Fichier TXT introuvable"
+
+    return render_template('debug_final.html', csv_content=csv_content, txt_content=txt_content)
+
 
 if __name__ == "__main__":
     app.run(debug=True)

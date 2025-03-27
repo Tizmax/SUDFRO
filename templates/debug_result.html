@@ -20,18 +20,6 @@
         <div class="button-group">
             <button class="btn-primary" onclick="saveCsv()">Enregistrer les modifications</button>
         </div>
-
-        
-        <!-- Partie statique : Documentation -->
-        <div class="documentation">
-            <h2>Comment entrainer l'IA sur un nouveau fournisseur ?</h2>
-            <p>1. Déposez un BL au format PDF sur la page principale.</p>
-            <p>2. Choisissez "Debug" pour voir comment le fichier est transformé.</p>
-            <p>3. La section ci-dessus vous montre les données lues dans le BL, celles-ci contiennent probablement des erreurs, corrigez-les.</p>
-            <p>5. Enregistrez les modifications</p>
-            <p>Vous arrivez alors sur une nouvelle page</p>
-            <p>6. Copiez le contenu intitulé "entrée" et "sortie" dans les boites correspondante sur le site de mistralAI</p>
-        </div>
     </div>
 
     <script>
@@ -77,37 +65,39 @@
 
         // Enregistre les modifications du tableau dans le CSV
         function saveCsv() {
-            let newCsvData = [];
-            
-            let headerCells = document.querySelectorAll("#headerRow th");
-            let headerRow = Array.from(headerCells).map(cell => cell.textContent);
-            newCsvData.push(headerRow.join(",")); 
+    let newCsvData = [];
+    
+    let headerCells = document.querySelectorAll("#headerRow th");
+    let headerRow = Array.from(headerCells).map(cell => cell.textContent);
+    newCsvData.push(headerRow.join(",")); 
 
-            const rows = document.querySelectorAll("#tableBody tr");
+    const rows = document.querySelectorAll("#tableBody tr");
 
-            rows.forEach(row => {
-                let rowData = [];
-                row.querySelectorAll("td, th").forEach(cell => { 
-                    rowData.push(cell.textContent);
-                });
-                newCsvData.push(rowData.join(","));
-            });
+    rows.forEach(row => {
+        let rowData = [];
+        row.querySelectorAll("td, th").forEach(cell => { 
+            rowData.push(cell.textContent);
+        });
+        newCsvData.push(rowData.join(","));
+    });
 
-            fetch("/update_csv", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    filename: "{{ csv_filename }}",
-                    content: newCsvData.join("\n")
-                })
-            }).then(response => {
-                if (response.ok) {
-                    alert("Modifications enregistrées !");
-                } else {
-                    alert("Erreur lors de l'enregistrement.");
-                }
-            });
+    fetch("/update_csv", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            filename: "{{ csv_filename }}",  // ✅ Vérifie que cette valeur est bien transmise par le backend
+            content: newCsvData.join("\n")
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = "/debug_final"; // ✅ Redirection sans paramètre
+        } else {
+            alert("Erreur lors de l'enregistrement du CSV");
         }
+    });
+}
 
 
         generateTable(csvData);

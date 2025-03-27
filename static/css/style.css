@@ -28,6 +28,8 @@ body {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     border-radius: 10px;
     text-align: center;
+    max-height: 95vh; /* Hauteur max à 95% de la fenêtre */
+    overflow-y: auto;  /* Activation du scroll vertical */
 }
 
 
@@ -199,4 +201,12 @@ ul li a:hover {
 
 .file-status.done {
     color: green;
+}
+
+textarea {
+    width: 100%;
+    height: 300px;
+    margin-bottom: 10px;
+    font-family: monospace;
+    font-size: 14px;
 }
