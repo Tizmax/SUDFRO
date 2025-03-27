@@ -11,7 +11,7 @@ body {
 }
 
 /* Conteneur principal */
-.container {
+.container-upload {
     width: 400px;
     padding: 20px;
     background: white;
@@ -164,4 +164,39 @@ ul li a:hover {
 
 #csvTable {
     padding-bottom: 30px;
+}
+
+/* Progress bar */
+#progressContainer {
+    width: 100%;
+    background: #ddd;
+    border-radius: 5px;
+    overflow: hidden;
+    height: 20px;
+    margin-top: 15px;
+    display: none;
+}
+
+#progressBar {
+    height: 100%;
+    width: 0%;
+    background: #007bff;
+    transition: width 0.4s ease-in-out;
+}
+
+.hidden {
+    display: none;
+}
+
+.file-status {
+    margin-left: 10px;
+    font-weight: bold;
+}
+
+.file-status.pending {
+    color: orange;
+}
+
+.file-status.done {
+    color: green;
 }

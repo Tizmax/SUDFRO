@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, send_from_directory, render_template, redirect, url_for
 import os
 import time
-from datetime import datetime
+import threading
 from pdftocsv import generate_csv_from_pdf
 from csvtotxt import format_txt_from_csv
 
@@ -20,29 +20,93 @@ def upload_page():
 def list_page():
     return render_template("liste.html")
 
-# 🟢 Route pour téléverser et traiter un fichier (comme "Importer dans l'ERP")
+# # 🟢 Route pour téléverser et traiter un fichier (comme "Importer dans l'ERP")
+# @app.route("/upload", methods=["POST"])
+# def upload_file():
+#     if "files" not in request.files:
+#         return "Aucun fichier trouvé", 400
+    
+#     files = request.files.getlist("files")  
+
+#     for file in files:
+#         if file.filename == "" or not file.filename.endswith(".pdf"):
+#             return "Fichier invalide", 400
+        
+#         # 🔹 Génération du CSV
+#         csv_content = generate_csv_from_pdf(file.read(), debug=False)
+
+#         # 🔹 Génération du TXT
+#         txt_filename = file.filename.replace('.pdf', '.txt')
+#         txt_path = os.path.join(UPLOAD_FOLDER, txt_filename)
+#         txt_content = format_txt_from_csv(csv_content)
+#         with open(txt_path, 'w', encoding='utf-8') as f:
+#             f.write(txt_content)
+
+#     return "Fichier téléversé avec succès", 200
+
+processing_status = {}  # ✅ Stocke l'état des fichiers traités
+
+def process_file(filename, file_content):
+    """ Fonction exécutée en arrière-plan pour traiter le fichier PDF """
+    global processing_status
+    print("thread started")
+    processing_status[filename] = "processing"  # ⏳ Marque comme en cours
+
+    try:
+    # 🔹 Conversion PDF → CSV
+        csv_content = generate_csv_from_pdf(file_content, debug=True)
+
+        # 🔹 Conversion CSV → TXT
+        txt_content = format_txt_from_csv(csv_content)
+
+        # 🔹 Sauvegarde du fichier TXT
+        txt_filename = filename.replace(".pdf", ".txt")
+        txt_path = os.path.join(UPLOAD_FOLDER, txt_filename)
+        with open(txt_path, "w", encoding="utf-8") as f:
+            f.write(txt_content)
+
+        processing_status[filename] = "done"  # ✅ Marque comme terminé
+
+        print("thread ended good")
+        print(processing_status)
+    except Exception as e:
+        processing_status[filename] = "error"  # ❌ Marque comme erreur
+        print("thread ended bad")
+
+
 @app.route("/upload", methods=["POST"])
 def upload_file():
     if "files" not in request.files:
-        return "Aucun fichier trouvé", 400
-    
-    files = request.files.getlist("files")  
+        return jsonify({"error": "Aucun fichier trouvé"}), 400
+
+    files = request.files.getlist("files")
+    file_names = []
 
     for file in files:
         if file.filename == "" or not file.filename.endswith(".pdf"):
-            return "Fichier invalide", 400
-        
-        # 🔹 Génération du CSV
-        csv_content = generate_csv_from_pdf(file.read(), debug=False)
+            return jsonify({"error": "Fichier invalide"}), 400
 
-        # 🔹 Génération du TXT
-        txt_filename = file.filename.replace('.pdf', '.txt')
-        txt_path = os.path.join(UPLOAD_FOLDER, txt_filename)
-        txt_content = format_txt_from_csv(csv_content)
-        with open(txt_path, 'w', encoding='utf-8') as f:
-            f.write(txt_content)
+        filename = file.filename.replace(' ', '_')
 
-    return "Fichier téléversé avec succès", 200
+        file_names.append(filename)
+        file_content = file.read()  # 📌 Sauvegarde du contenu pour éviter de relire après .save()
+
+        # ✅ Lancement du traitement en arrière-plan (Thread)
+        threading.Thread(target=process_file, args=(filename, file_content)).start()
+        time.sleep(3)
+
+    
+    return jsonify({"message": "Fichiers reçus, traitement en cours", "files": file_names}), 200
+
+# 🟢 Vérification du statut des fichiers
+@app.route("/check_status", methods=["POST"])
+def check_status():
+    data = request.get_json()
+    filenames = data.get("filenames", [])
+
+    status = {filename: processing_status.get(filename, "unknown") for filename in filenames}
+    return jsonify(status)
+
 
 # 🟢 Route pour téléverser et rediriger vers Debug
 @app.route("/debug", methods=["POST"])
