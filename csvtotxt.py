@@ -7,7 +7,7 @@ SPACE = ' '  # Caractère de remplissage
 def format_txt_from_csv(csv_content):
     """ Convertit une chaîne CSV en une chaîne TXT formatée """
 
-    csvfile = io.StringIO(csv_content)  # 📌 On utilise un flux mémoire au lieu d'un fichier
+    csvfile = io.StringIO(csv_content)
     reader = csv.reader(csvfile)
     rows = list(reader)
     formatted_lines = []
@@ -34,22 +34,24 @@ def format_txt_from_csv(csv_content):
         refFournisseur = rows[i][0]
         dateLimite = rows[i][2]
         NbColis = rows[i][3]
-        quantite = rows[i][4]
-        unite = rows[i][5]
-        numLot = rows[i][6]
+        poids = rows[i][4]
+        quantite = rows[i][5]
+        unite = rows[i][6]
+        numLot = rows[i][7]
 
         refFournisseur = fill(refFournisseur, SPACE, 20)
         dateLimite = DDMMYYYY_to_YYYYMMDD(dateLimite)
-        NbColis = fill(NbColis.split('.')[0], '0', 5, left=True)
+        NbColis = fill(NbColis.split('.')[0], '0', 8, left=True)
+        p1, p2 = poids.split('.')
+        poids = fill(p1, '0', 4, left=True) + '.' + fill(p2, '0', 3)
         q1, q2 = quantite.split('.')
-        quantite = fill(q1, '0', 11, left=True) + '.' + fill(q2, '0', 3)
-        poids = fill(q1, '0', 4, left=True) + '.' + fill(q2, '0', 3)
+        quantite =  fill(q1, '0', 11, left=True) + '.' + fill(q2, '0', 3)
         numLot = fill(numLot, SPACE, 20)
 
         formatted_lines.append(f"DPIDBX{SPACE * 39}CT{SPACE*2}{NbColis}{poids}{'0'*8}{numLot}{SPACE * 26}{dateLimite}")
         formatted_lines.append(f"DART000001{SPACE*3}{refFournisseur}{SPACE * 56}{quantite}{SPACE*3}{unite}")
 
-    return "\n".join(formatted_lines)  # 📌 Retourne une chaîne TXT au lieu d'écrire un fichier
+    return "\n".join(formatted_lines) 
 
 
 def DDMMYYYY_to_YYYYMMDD(date):
