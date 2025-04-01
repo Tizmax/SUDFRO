@@ -24,7 +24,6 @@ def process_file(filename, file_content):
     """ Fonction exécutée en arrière-plan pour traiter le fichier PDF """
     global processing_status
     processing_status[filename] = "processing"  # ⏳ Marque comme en cours
-
     try:
         # Conversion PDF → CSV
         csv_content = generate_csv_from_pdf(file_content, debug=True)
@@ -33,7 +32,7 @@ def process_file(filename, file_content):
         txt_content = format_txt_from_csv(csv_content)
 
         # Sauvegarde du fichier TXT
-        txt_filename = filename.replace(".pdf", ".txt")
+        txt_filename = filename.replace(".pdf", ".txt").replace(".PDF", ".txt")
         txt_path = os.path.join(UPLOAD_FOLDER, txt_filename)
         with open(txt_path, "w", encoding="utf-8") as f:
             f.write(txt_content)
@@ -56,7 +55,7 @@ def upload_file():
     file_names = []
 
     for file in files:
-        if file.filename == "" or not file.filename.endswith(".pdf"):
+        if file.filename == "" or not file.filename.lower().endswith(".pdf"):
             return jsonify({"error": "Fichier invalide"}), 400
 
         filename = file.filename.replace(' ', '_')
@@ -94,7 +93,7 @@ def debug_file():
     
     file = files[0]
 
-    if file.filename == "" or not file.filename.endswith(".pdf"):
+    if file.filename == "" or not file.filename.lower().endswith(".pdf"):
         return "Fichier invalide", 400
     
     
