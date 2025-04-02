@@ -10,6 +10,17 @@ body {
     margin: 0;
 }
 
+/* .container {
+    width: 400px;
+    padding: 20px;
+    background: white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    text-align: center;
+    max-height: 95vh; 
+    overflow-y: auto;  
+} */
+
 /* Conteneur principal */
 .container-upload {
     width: 400px;
@@ -18,7 +29,37 @@ body {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     border-radius: 10px;
     text-align: center;
+    max-height: 95vh; /* Hauteur max à 95% de la fenêtre */
+    overflow-y: auto;  /* Activation du scroll vertical */
 }
+
+/* Conteneur historique */
+
+.history-container {
+    position: fixed;
+    right: 10px;
+    width: 250px;
+    background: #f8f9fa;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    max-height: 95vh; /* Hauteur max à 95% de la fenêtre */
+    overflow-y: auto;  /* Activation du scroll vertical */
+}
+.processing-container {
+    position: fixed;
+    left: 10px;
+    width: 250px;
+    background: #f8f9fa;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    max-height: 95vh; /* Hauteur max à 95% de la fenêtre */
+    overflow-y: auto;  /* Activation du scroll vertical */
+}
+
 
 /* Conteneur debug */
 .container-debug {

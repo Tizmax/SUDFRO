@@ -2,15 +2,66 @@ from flask import Flask, request, jsonify, render_template, redirect, url_for
 import os
 import time
 import threading
+import json
 from pdftocsv import generate_csv_from_pdf
 from csvtotxt import format_txt_from_csv
 
 app = Flask(__name__)
+history_lock = threading.Lock() # Verrou pour la gestion de l'historique
 
 UPLOAD_FOLDER = "uploads"
 DEBUG_FOLDER = "debug"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(DEBUG_FOLDER, exist_ok=True)
+HISTORY_FILE = "history.json"
+
+def load_history():
+    if os.path.exists(HISTORY_FILE):
+        with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return []
+
+def save_history(history):
+    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+        json.dump(history, f, indent=4)
+
+@app.route("/update_history", methods=["POST"])
+def update_history():
+    data = request.get_json()
+    filename = data.get("filename")
+    
+    if not filename:
+        return jsonify({"error": "Missing filename"}), 400
+    
+    history = load_history()
+    history.append({"filename": filename, "status": "done"})
+    save_history(history)
+    
+    return jsonify({"success": True})
+
+
+
+@app.route("/get_history", methods=["GET"])
+def get_history():
+    return jsonify(load_history())
+
+def add_to_history(filename, status="processing"):
+    """Ajoute un fichier terminé à l'historique en évitant les problèmes de concurrence"""
+    with history_lock:  # 🔒 Bloque l'accès à l'historique pendant l'écriture
+        history = load_history()  # Charge l'historique actuel
+        history.append({"filename": filename, "status": status})  # Ajoute le fichier
+        save_history(history)  # Sauvegarde proprement
+
+def update_history_status(filename, new_status):
+    """Modifie le statut d'un fichier spécifique dans l'historique"""
+    with history_lock:  # 🔒 Sécurise l'accès au fichier JSON
+        history = load_history()  # Charge l'historique
+        for entry in history:
+            if entry["filename"] == filename:
+                entry["status"] = new_status  # 📝 Met à jour le statut
+                break
+        save_history(history)  # Sauvegarde proprement
+
 
 # ➡️ Page principale
 @app.route("/")
@@ -24,6 +75,8 @@ def process_file(filename, file_content):
     """ Fonction exécutée en arrière-plan pour traiter le fichier PDF """
     global processing_status
     processing_status[filename] = "processing"  # ⏳ Marque comme en cours
+    
+    add_to_history(filename)  # 🔄 Ajoute à l'historique après le traitement
     try:
         # Conversion PDF → CSV
         csv_content = generate_csv_from_pdf(file_content, debug=True)
@@ -39,8 +92,11 @@ def process_file(filename, file_content):
 
         processing_status[filename] = "done"  # ✅ Marque comme terminé
 
+        update_history_status(filename, 'done')  # 🔄 Ajoute à l'historique après le traitement
+
     except Exception as e:
         processing_status[filename] = "error"  # ❌ Marque comme erreur
+        update_history_status(filename, 'error')  # 🔄 Ajoute à l'historique après le traitement
         print(f"Error processing file {filename}: {e}")
         
 

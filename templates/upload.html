@@ -2,21 +2,28 @@
 <html lang="fr">
 {% include 'head.html' %}
 <body>
+        <div class="container-upload">
+            <h1>Téléversement des fichiers PDF</h1>
 
-    <div class="container-upload">
-        <h1>Téléversement des fichiers PDF</h1>
-
-        <form id="uploadForm">
-            <div id="dropzone" class="dropzone">Déposez des fichiers PDF ici ou cliquez</div>
-            <input type="file" id="fileInput" accept="application/pdf" multiple hidden>
-            <ul id="fileList"></ul>
-            <div class="button-group">
-                <button type="button" class="btn-secondary" onclick="debugFiles()">Entrainer l'IA</button>
-                <button type="button" class="btn-primary"onclick="uploadFiles()">Importer dans l'ERP</button>
-            </div>
-        </form>
-        
-    </div>
+            <form id="uploadForm">
+                <div id="dropzone" class="dropzone">Déposez des fichiers PDF ici ou cliquez</div>
+                <input type="file" id="fileInput" accept="application/pdf" multiple hidden>
+                <ul id="fileList"></ul>
+                <div class="button-group">
+                    <button type="button" class="btn-secondary" onclick="debugFiles()">Entrainer l'IA</button>
+                    <button type="button" class="btn-primary"onclick="uploadFiles()">Importer dans l'ERP</button>
+                </div>
+            </form>
+            
+        </div>
+        <div class="history-container">
+            <h3>Historique des fichiers</h3>
+            <ul id="done-list"></ul>
+        </div>
+        <div class="processing-container">
+            <h3>Fichiers en cours de traitement</h3>
+            <ul id="processing-list"></ul>
+        </div>
 
     <script>
         const dropzone = document.getElementById("dropzone");
@@ -44,6 +51,10 @@
             handleFiles(fileInput.files);
         });
 
+
+
+        fetchHistory(); // Chargement initial
+        setInterval(fetchHistory, 5000); // Mise à jour automatique toutes les 5s
     </script>
 </body>
 </html>

@@ -113,6 +113,38 @@ async function submitForm(action) {
     }
 }
 
+// gestion de l'historique
+function fetchHistory() {
+    fetch("/get_history")  // 🔄 Récupère le JSON
+        .then(response => response.json())
+        .then(history => {
+            const processingList = document.getElementById("processing-list");
+            const doneList = document.getElementById("done-list");
+
+            processingList.innerHTML = ""; // 🔄 Nettoie la liste
+            doneList.innerHTML = "";
+
+            history.forEach(entry => {
+                const listItem = document.createElement("li");
+
+                if (entry.status === "processing") {
+                    listItem.textContent = entry.filename + " ⏳";
+                    processingList.appendChild(listItem);
+                } else if (entry.status === "done") {
+                    listItem.textContent = entry.filename + " ✅";
+                    doneList.appendChild(listItem);
+                } else if (entry.status === "error") {
+                    listItem.textContent = entry.filename + " ❌";
+                    doneList.appendChild(listItem);
+                }
+
+            });
+        })
+        .catch(error => console.error("Erreur lors du chargement de l'historique :", error));
+}
+
+
+
 /// debug_result.html
 
 // Génère le tableau issu du CSV avec les données modifiables
