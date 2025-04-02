@@ -3,6 +3,7 @@ import io
 
 GLN = "1234567890123"
 SPACE = ' '  # Caractère de remplissage
+NB_COLONNES = 8  # Nombre de colonnes au total
 
 def format_txt_from_csv(csv_content):
     """ Convertit une chaîne CSV en une chaîne TXT formatée """
@@ -31,7 +32,10 @@ def format_txt_from_csv(csv_content):
 
     ## Itération sur les articles
     for i in range(3, len(rows)):
-        refFournisseur = rows[i][0]
+        # Remplissage des colonnes manquantes
+        rows[i].extend([""] * (NB_COLONNES - len(rows[i]))) 
+
+        refFournisseur = rows[i][0] 
         dateLimite = rows[i][2]
         NbColis = rows[i][3]
         poids = rows[i][4]
@@ -42,9 +46,15 @@ def format_txt_from_csv(csv_content):
         refFournisseur = fill(refFournisseur, SPACE, 20)
         dateLimite = DDMMYYYY_to_YYYYMMDD(dateLimite)
         NbColis = fill(NbColis.split('.')[0], '0', 8, left=True)
-        p1, p2 = poids.split('.')
+        if '.' in poids:
+            p1, p2 = poids.split('.')
+        else:
+            p1, p2 = poids, '0'
         poids = fill(p1, '0', 4, left=True) + '.' + fill(p2, '0', 3)
-        q1, q2 = quantite.split('.')
+        if '.' in quantite:
+            q1, q2 = quantite.split('.')
+        else:
+            q1, q2 = quantite, '0'
         quantite =  fill(q1, '0', 11, left=True) + '.' + fill(q2, '0', 3)
         numLot = fill(numLot, SPACE, 20)
 
@@ -59,3 +69,5 @@ def DDMMYYYY_to_YYYYMMDD(date):
 
 def fill(string, filler, length, left=False):
     return string + filler * (length-len(string)) if not left else filler * (length-len(string)) + string
+
+
