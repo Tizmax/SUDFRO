@@ -89,6 +89,16 @@ function fetchHistory() {
 }
 
 
+function clearDoneFiles() {
+    fetch("/clear_history", { method: "POST" })  // 🔄 Envoie la requête à Flask
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                fetchHistory(); // 🔄 Rafraîchit l'affichage après la suppression
+            }
+        })
+        .catch(error => console.error("Erreur lors de la suppression :", error));
+}
 
 /// debug_result.html
 

@@ -45,6 +45,18 @@ def update_history():
 def get_history():
     return jsonify(load_history())
 
+@app.route("/clear_history", methods=["POST"])
+def clear_history():
+    history = load_history()
+
+    # Garde seulement les fichiers qui ne sont PAS "done"
+    history = [entry for entry in history if entry["status"] == "processing"]
+
+    save_history(history)  # 📝 Sauvegarde le nouveau JSON
+
+    return jsonify({"success": True})
+
+
 def add_to_history(filename, status="processing"):
     """Ajoute un fichier terminé à l'historique en évitant les problèmes de concurrence"""
     with history_lock:  # 🔒 Bloque l'accès à l'historique pendant l'écriture
