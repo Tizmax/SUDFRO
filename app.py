@@ -73,10 +73,8 @@ processing_status = {}  # Stocke l'état des fichiers traités
 
 def process_file(filename, file_content):
     """ Fonction exécutée en arrière-plan pour traiter le fichier PDF """
-    global processing_status
-    processing_status[filename] = "processing"  # ⏳ Marque comme en cours
     
-    add_to_history(filename)  # 🔄 Ajoute à l'historique après le traitement
+    add_to_history(filename)  # ⏳ Marque comme en cours
     try:
         # Conversion PDF → CSV
         csv_content = generate_csv_from_pdf(file_content, debug=True)
@@ -90,13 +88,10 @@ def process_file(filename, file_content):
         with open(txt_path, "w", encoding="utf-8") as f:
             f.write(txt_content)
 
-        processing_status[filename] = "done"  # ✅ Marque comme terminé
-
-        update_history_status(filename, 'done')  # 🔄 Ajoute à l'historique après le traitement
+        update_history_status(filename, 'done')  # ✅ Marque comme terminé
 
     except Exception as e:
-        processing_status[filename] = "error"  # ❌ Marque comme erreur
-        update_history_status(filename, 'error')  # 🔄 Ajoute à l'historique après le traitement
+        update_history_status(filename, 'error') # ✅ Marque comme terminé
         print(f"Error processing file {filename}: {e}")
         
 

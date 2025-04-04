@@ -23,65 +23,10 @@ function uploadFiles() {
     let formData = new FormData();
     selectedFiles.forEach(file => formData.append("files", file));
 
-    let uploadedFiles = [];
-
-    // Affichage initial des fichiers avec icône ⏳
-    document.getElementById("fileList").innerHTML = selectedFiles
-        .map((file, index) => `<li>${file.name} <span id="file-${file.name}" class="file-status pending">⏳</span></li>`)
-        .join("");
 
     fetch("/upload", { method: "POST", body: formData })
         .then(response => response.json())
-        .then(data => {
-            if (data.files) {
-                uploadedFiles = data.files; 
-                checkProcessingStatus(uploadedFiles);  
-            }
-        })
         .catch(() => alert("Erreur lors du téléversement."));
-}
-
-// Vérification dynamique des statuts
-function checkProcessingStatus(filenames) {
-    let interval = setInterval(() => {
-    if (filenames.length === 0) {
-        clearInterval(interval);
-        return;
-    }
-
-    fetch("/check_status", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filenames })
-    })
-    .then(response => response.json())
-    .then(statusData => {
-        let stillProcessing = [];
-
-        filenames.forEach(filename => {
-            let statusElement = document.getElementById(`file-${filename}`);
-            if (!statusElement) return; // Ignore si l'élément n'existe pas
-
-            if (statusData[filename] === "done") {
-                statusElement.textContent = "✅";
-                statusElement.classList.remove("pending");
-                statusElement.classList.add("done");
-            } else if (statusData[filename] === "error") {
-                statusElement.textContent = "❌";
-                statusElement.classList.remove("pending");
-                statusElement.classList.add("error");
-            } else {
-                stillProcessing.push(filename); // ✅ On garde les fichiers qui sont encore en traitement
-            }
-        });
-
-        if (stillProcessing.length === 0) {
-            clearInterval(interval);
-        } else {
-            filenames = stillProcessing; 
-        }
-    });
-    }, 2000); // Vérification toutes les 2 secondes
 }
 
 async function debugFiles() {

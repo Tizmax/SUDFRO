@@ -10,17 +10,6 @@ body {
     margin: 0;
 }
 
-/* .container {
-    width: 400px;
-    padding: 20px;
-    background: white;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
-    text-align: center;
-    max-height: 95vh; 
-    overflow-y: auto;  
-} */
-
 /* Conteneur principal */
 .container-upload {
     width: 400px;
