@@ -25,21 +25,6 @@ def save_history(history):
     with open(HISTORY_FILE, "w", encoding="utf-8") as f:
         json.dump(history, f, indent=4)
 
-@app.route("/update_history", methods=["POST"])
-def update_history():
-    data = request.get_json()
-    filename = data.get("filename")
-    
-    if not filename:
-        return jsonify({"error": "Missing filename"}), 400
-    
-    history = load_history()
-    history.append({"filename": filename, "status": "done"})
-    save_history(history)
-    
-    return jsonify({"success": True})
-
-
 
 @app.route("/get_history", methods=["GET"])
 def get_history():
@@ -47,12 +32,14 @@ def get_history():
 
 @app.route("/clear_history", methods=["POST"])
 def clear_history():
-    history = load_history()
+    
+    with history_lock:  # 🔒 Bloque l'accès à l'historique pendant l'écriture
+        history = load_history()
 
-    # Garde seulement les fichiers qui ne sont PAS "done"
-    history = [entry for entry in history if entry["status"] == "processing"]
+        # Garde seulement les fichiers qui ne sont PAS "done"
+        history = [entry for entry in history if entry["status"] == "processing"]
 
-    save_history(history)  # 📝 Sauvegarde le nouveau JSON
+        save_history(history)  # 📝 Sauvegarde le nouveau JSON
 
     return jsonify({"success": True})
 

@@ -117,6 +117,7 @@ function generateTable(csv) {
         let th = document.createElement("th");
         th.textContent = col;
         headerRow.appendChild(th);
+        
     });
 
     // Création des autres lignes
@@ -135,10 +136,40 @@ function generateTable(csv) {
 
             tr.appendChild(td);
         });
-
+        if (rowIndex >= 2) {
+            addDeleteButton(tableBody, tr); // Ajoute le bouton de suppression
+        }
         tableBody.appendChild(tr);
     });
 }
+
+function addRow() {
+    const tableBody = document.getElementById("tableBody");
+    const newRow = document.createElement("tr");
+    for (let i = 0; i < tableBody.rows[3].cells.length - 1; i++) {
+        let newCell = document.createElement("td");
+        newCell.contentEditable = "true"; 
+        if (i === 1) {
+            newCell.textContent = "Nouvelle ligne"
+        } 
+        newRow.appendChild(newCell);
+    }
+    addDeleteButton(tableBody, newRow); // Ajoute le bouton de suppression
+    tableBody.appendChild(newRow);
+}
+
+function addDeleteButton(tableBody, row) {
+    let deleteCell = document.createElement("td");
+    let deleteButton = document.createElement("button");
+    deleteButton.textContent = "❌";
+    deleteButton.onclick = function() {
+        tableBody.deleteRow(row.rowIndex - 1); // Supprime la ligne
+    };
+    deleteCell.appendChild(deleteButton);
+    row.appendChild(deleteCell);
+}
+
+
 
 // Enregistre les modifications du tableau dans le CSV
 function saveCsv() {
