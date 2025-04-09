@@ -9,24 +9,10 @@ function handleFiles(files) {
         fileList.appendChild(li);
     });
 
-    if (selectedFiles.length === 0) {
-        alert("Veuillez sélectionner uniquement des fichiers PDF.");
-    }
 }
 
-function uploadFiles() {
-    if (selectedFiles.length === 0) {
-        alert("Aucun fichier sélectionné.");
-        return;
-    }
-
-    let formData = new FormData();
-    selectedFiles.forEach(file => formData.append("files", file));
-
-
-    fetch("/upload", { method: "POST", body: formData })
-        .then(response => response.json())
-        .catch(() => alert("Erreur lors du téléversement."));
+async function uploadFiles() {
+    await submitForm("/upload");
 }
 
 async function debugFiles() {
@@ -50,11 +36,8 @@ async function submitForm(action) {
     if (response.redirected) {
         window.location.href = response.url;  // 🔄 Redirection pour le Debug
     } else if (response.ok) {
-        alert("Fichiers téléversés avec succès !");
         fileList.innerHTML = "";
         selectedFiles = [];
-    } else {
-        alert("Erreur lors du traitement !");
     }
 }
 
@@ -80,6 +63,7 @@ function fetchHistory() {
                     doneList.appendChild(listItem);
                 } else if (entry.status === "error") {
                     listItem.textContent = entry.filename + " ❌";
+                    listItem.title = "Erreur lors du traitement de ce fichier"; // 👈 Texte au survol
                     doneList.appendChild(listItem);
                 }
 
@@ -146,7 +130,7 @@ function generateTable(csv) {
 function addRow() {
     const tableBody = document.getElementById("tableBody");
     const newRow = document.createElement("tr");
-    for (let i = 0; i < tableBody.rows[3].cells.length - 1; i++) {
+    for (let i = 0; i < tableBody.rows[1].cells.length; i++) {
         let newCell = document.createElement("td");
         newCell.contentEditable = "true"; 
         if (i === 1) {
@@ -184,6 +168,7 @@ function saveCsv() {
     rows.forEach(row => {
     let rowData = [];
     row.querySelectorAll("td, th").forEach(cell => { 
+        if (cell.querySelector("button")) return;
         rowData.push(cell.textContent);
     });
     newCsvData.push(rowData.join(","));
