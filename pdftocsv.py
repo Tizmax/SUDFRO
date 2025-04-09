@@ -26,7 +26,7 @@ def extract_text_from_pdf(byte):
 def generate_csv_from_text(text):
     # Envoie de la requête à l'API
     chat_response = client.agents.complete(
-        agent_id="ag:3fdcd4c2:20250306:sudfro:01656dd4",
+        agent_id="ag:d529f822:20250409:sudfro:2dac9571",
         messages = [
             {
                 "role": "user",
