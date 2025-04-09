@@ -47,9 +47,18 @@ def clear_history():
 def add_to_history(filename, status="processing"):
     """Ajoute un fichier terminé à l'historique en évitant les problèmes de concurrence"""
     with history_lock:  # 🔒 Bloque l'accès à l'historique pendant l'écriture
+
         history = load_history()  # Charge l'historique actuel
+
+        # Vérifie si le fichier est déjà présent
+        for entry in history:
+            if entry["filename"] == filename:
+                if entry["status"] in ["done", "processing"]: # Si il y a eu une erreur on permet de recommencer
+                    return False # Ne rien faire si déjà présent 
+
         history.append({"filename": filename, "status": status})  # Ajoute le fichier
         save_history(history)  # Sauvegarde proprement
+        return True
 
 def update_history_status(filename, new_status):
     """Modifie le statut d'un fichier spécifique dans l'historique"""
@@ -73,7 +82,9 @@ processing_status = {}  # Stocke l'état des fichiers traités
 def process_file(filename, file_content):
     """ Fonction exécutée en arrière-plan pour traiter le fichier PDF """
     
-    add_to_history(filename)  # ⏳ Marque comme en cours
+    add = add_to_history(filename)  # ⏳ Marque comme en cours
+    if not add:
+        return
     try:
         # Conversion PDF → CSV
         csv_content = generate_csv_from_pdf(file_content, debug=True)
