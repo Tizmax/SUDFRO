@@ -53,8 +53,10 @@ def add_to_history(filename, status="processing"):
         # Vérifie si le fichier est déjà présent
         for entry in history:
             if entry["filename"] == filename:
-                if entry["status"] in ["done", "processing"]: # Si il y a eu une erreur on permet de recommencer
+                if entry["status"] in ["done", "processing"]: 
                     return False # Ne rien faire si déjà présent 
+                else : # Si il y a eu une erreur on permet de recommencer
+                    entry["status"] = status
 
         history.append({"filename": filename, "status": status})  # Ajoute le fichier
         save_history(history)  # Sauvegarde proprement
