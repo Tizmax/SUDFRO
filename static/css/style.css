@@ -49,10 +49,21 @@ body {
     overflow-y: auto;  /* Activation du scroll vertical */
 }
 
+.other {
+    position: fixed;
+    top: 10px;
+    background: #f8f9fa;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    max-height: 95vh; /* Hauteur max à 95% de la fenêtre */
+    overflow-y: auto;  /* Activation du scroll vertical */
+}
 
 /* Conteneur debug */
 .container-debug {
-    width: 1000px;
+    width: auto;
     padding: 20px;
     background: white;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
@@ -211,7 +222,8 @@ button:hover img {
     word-wrap: break-word;
 }
 
-#csvTable {
+.table-style {
+    width: 100% ;
     padding-bottom: 30px;
 }
 

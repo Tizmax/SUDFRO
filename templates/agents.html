@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fr">
+{% include 'head.html' %}
+<body>
+    <div class="container-debug">
+
+        <h1>Gestion des Agents</h1>
+
+        <table class="table-style">
+            <thead>
+                <tr id="headerRow">
+                    <th>Nom du fournisseur</th> <th>ID de l'Agent</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                {% for name, agent_id in agents.items() %}
+                <tr>
+                    <td contenteditable="true">{{ name }}</td>
+                    <td contenteditable="true">{{ agent_id }}</td>
+                    <td>
+                        <button onclick="deleteAgentRow(this)">❌</button>
+                    </td>
+                </tr>  
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <div class="button-group">
+            <button class="btn-secondary" onclick="retour()">Retour</button>
+            <button class="btn-primary" onclick="saveAgents()">Sauvegarder les changements</button>
+            <button class="btn-secondary" onclick="addRow()">Ajouter un Agent</button>
+        </div>
+    </div>
+
+    <script>
+
+        function retour() {
+            window.location.href = "{{ url_for('upload_page') }}";
+        }
+
+        // Fonction pour ajouter une nouvelle ligne au tableau (visuel)
+        function addRow() {
+            const tableBody = document.getElementById('tableBody');
+            const newRow = document.createElement('tr');
+            // Utiliser contenteditable="true" comme dans le HTML initial
+            newRow.innerHTML = `
+                <td contenteditable="true" class="agent-name"></td>
+                <td contenteditable="true" class="agent-id"></td>
+                <td>
+                    <button onclick="deleteAgentRow(this)">❌</button>
+                </td>
+            `;
+            tableBody.appendChild(newRow);
+        }
+
+        // Fonction pour supprimer une ligne du tableau (visuel)
+        // Prend le bouton cliqué en argument
+        function deleteAgentRow(buttonElement) {
+            // Trouve le parent 'tr' le plus proche et le supprime
+            buttonElement.closest('tr').remove();
+        }
+
+        // Fonction pour sauvegarder les changements
+        function saveAgents() {
+            const tableBody = document.getElementById('tableBody');
+            const agentsDict = {};
+            const rows = tableBody.querySelectorAll('tr'); // Sélectionne toutes les lignes
+            let hasDuplicateName = false;
+            const seenNames = new Set();
+
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                // S'assurer qu'il y a bien au moins 2 cellules (Nom, ID)
+                if (cells.length >= 2) {
+                    const nameCell = cells[0]; // La cellule du nom
+                    const idCell = cells[1];   // La cellule de l'ID
+
+                    // Lire le contenu texte des cellules éditables
+                    const name = nameCell.textContent.trim();
+                    const id = idCell.textContent.trim();
+
+                    // Validation simple : ignorer si nom ou ID est vide
+                    if (name === "" || id === "") {
+                        if (name !== "" || id !== "") {
+                            alert(`La ligne avec le nom "${name}" ou l'ID "${id}" est incomplète et sera ignorée.`);
+                        }
+                        return; // Passe à la ligne suivante
+                    }
+
+                    // Vérifier les doublons de noms (clés)
+                    if (seenNames.has(name)) {
+                        alert(`Attention : Le nom d'agent "${name}" est utilisé plusieurs fois. Seule la dernière occurrence sera sauvegardée.`);
+                        hasDuplicateName = true;
+                    }
+                    seenNames.add(name);
+
+                    // Ajouter au dictionnaire
+                    agentsDict[name] = id;
+                }
+            });
+
+            // Envoyer le dictionnaire au serveur
+            fetch('/save_agents', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(agentsDict),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    alert('Agents sauvegardés avec succès !');
+                } else {
+                    alert('Erreur lors de la sauvegarde : ' + data.message);
+                }
+            })
+            .catch((error) => {
+                console.error('Erreur Fetch:', error);
+                alert('Erreur de communication lors de la sauvegarde.');
+            });
+        }
+    </script>
+</body>
+</html>

@@ -8,12 +8,14 @@ from csvtotxt import format_txt_from_csv
 
 app = Flask(__name__)
 history_lock = threading.Lock() # Verrou pour la gestion de l'historique
+agents_lock = threading.Lock() # Verrou pour la gestion de l'historique
 
 UPLOAD_FOLDER = "uploads"
 DEBUG_FOLDER = "debug"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(DEBUG_FOLDER, exist_ok=True)
 HISTORY_FILE = "history.json"
+AGENTS_FILE = "agents.json"
 
 def load_history():
     if os.path.exists(HISTORY_FILE):
@@ -73,13 +75,63 @@ def update_history_status(filename, new_status):
         save_history(history)  # Sauvegarde proprement
 
 
+def load_agents():
+    """Charge les agents depuis le fichier JSON (format dictionnaire)."""
+    with agents_lock:
+        try:
+            if os.path.exists(AGENTS_FILE):
+                with open(AGENTS_FILE, 'r', encoding='utf-8') as f:
+                    # Charger directement le dictionnaire
+                    data = json.load(f)
+                    if isinstance(data, dict):
+                        return data
+                    else:
+                        print(f"Warning: {AGENTS_FILE} ne contient pas un objet JSON valide. Retour d'un dict vide.")
+                        # Optionnel : essayer de corriger ou écraser avec un dict vide
+                        # save_agents_data({}) # Attention: écrase les données existantes si invalides
+                        return {}
+            else:
+                # Si le fichier n'existe pas, créer un fichier avec un objet vide
+                with open(AGENTS_FILE, 'w', encoding='utf-8') as f:
+                    json.dump({}, f)
+                return {}
+        except (json.JSONDecodeError, IOError) as e:
+            print(f"Erreur lors de la lecture de {AGENTS_FILE}: {e}")
+            return {} # Retourner un dictionnaire vide en cas d'erreur
+
+def save_agents_data(agents_dict):
+    """Sauvegarde le dictionnaire des agents dans le fichier JSON."""
+    if not isinstance(agents_dict, dict):
+        print("Erreur: save_agents_data attend un dictionnaire.")
+        return False
+    with agents_lock:
+        try:
+            with open(AGENTS_FILE, 'w', encoding='utf-8') as f:
+                json.dump(agents_dict, f, indent=2, ensure_ascii=False) # Sauvegarder le dictionnaire
+            return True
+        except IOError as e:
+            print(f"Erreur lors de l'écriture de {AGENTS_FILE}: {e}")
+            return False
+    
+def agentid_by_filename(filename):
+    """Trouve un agent par son nom dans le fichier JSON."""
+    with agents_lock:
+        try:
+            with open(AGENTS_FILE, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                for name,id in data.items():
+                    if name in filename:
+                        return id
+                return data.get("Default")  # Return default agent ID if no specific match found
+        except (json.JSONDecodeError, IOError) as e:
+            print(f"Erreur lors de la lecture de {AGENTS_FILE}: {e}")
+    return None
+
 # ➡️ Page principale
 @app.route("/")
 def upload_page():
     return render_template("upload.html")
 
-
-processing_status = {}  # Stocke l'état des fichiers traités
 
 def process_file(filename, file_content):
     """ Fonction exécutée en arrière-plan pour traiter le fichier PDF """
@@ -88,8 +140,13 @@ def process_file(filename, file_content):
     if not add:
         return
     try:
+        # Choix du meilleur agent
+        agent_id = agentid_by_filename(filename)
+
+        print(f"Agent ID trouvé pour {filename}: {agent_id}")
+
         # Conversion PDF → CSV
-        csv_content = generate_csv_from_pdf(file_content, debug=True)
+        csv_content = generate_csv_from_pdf(file_content, agent_id, debug=True)
 
         # Conversion CSV → TXT
         txt_content = format_txt_from_csv(csv_content)
@@ -133,14 +190,6 @@ def upload_file():
     
     return jsonify({"message": "Fichiers reçus, traitement en cours", "files": file_names}), 200
 
-# ⬅️ Requête sur le statut de traitement des fichiers
-@app.route("/check_status", methods=["POST"])   
-def check_status():
-    data = request.get_json()
-    filenames = data.get("filenames", [])
-
-    status = {filename: processing_status.get(filename, "unknown") for filename in filenames}
-    return jsonify(status)
 
 
 # 🔄️ Traite partiellement le fichier sélectionné et renvoie sur la page de débug
@@ -159,8 +208,12 @@ def debug_file():
     if file.filename == "" or not file.filename.lower().endswith(".pdf"):
         return "Fichier invalide", 400
     
+    # Choix du meilleur agent
+    agent_id = agentid_by_filename(file.filename)
+
+    print(f"Agent ID trouvé pour {file.filename}: {agent_id}")
     
-    generate_csv_from_pdf(file.read(), debug=True)
+    generate_csv_from_pdf(file.read(), agent_id, debug=True)
 
     return redirect(url_for("debug_result_page"))
 
@@ -205,6 +258,30 @@ def debug_final():
     txt_content = open(txt_path, "r", encoding="utf-8").read() if os.path.exists(txt_path) else "Fichier TXT introuvable"
 
     return render_template('debug_final.html', csv_content=csv_content, txt_content=txt_content)
+
+
+@app.route('/agents')
+def agents():
+    """Affiche la page de gestion des agents."""
+    agents_list = load_agents()
+    return render_template('agents.html', agents=agents_list)
+
+@app.route('/save_agents', methods=['POST'])
+def save_agents_route():
+    """Reçoit les données des agents depuis le client et les sauvegarde."""
+    try:
+        agents_data = request.get_json()
+        if not isinstance(agents_data, dict):
+             raise ValueError("Les données reçues ne sont pas un dictionnaire.")
+        # Ajouter une validation plus poussée si nécessaire (champs requis, format ID...)
+
+        if save_agents_data(agents_data):
+            return jsonify({"status": "ok", "message": "Agents sauvegardés avec succès."})
+        else:
+            return jsonify({"status": "error", "message": "Erreur lors de la sauvegarde des agents."}), 500
+    except Exception as e:
+        print(f"Erreur dans /save_agents: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 400
 
 
 if __name__ == "__main__":

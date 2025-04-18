@@ -29,8 +29,16 @@
             <h3>Fichiers en cours de traitement</h3>
             <ul id="processing-list"></ul>
         </div>
+        <div class="other">
+            <button class="btn-secondary" onclick="agents()">Gérer les Agents</button>
+        </div>
 
     <script>
+
+        function agents() {
+            window.location.href = "{{ url_for('agents') }}";
+        }
+
         const dropzone = document.getElementById("dropzone");
         const fileInput = document.getElementById("fileInput");
         const fileList = document.getElementById("fileList");
