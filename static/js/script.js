@@ -199,3 +199,7 @@ function copyToClipboard(elementId) {
     document.execCommand("copy");
     alert("Copié dans le presse-papier !");
 }
+
+function retour() {
+    window.location.href = "/";
+}
