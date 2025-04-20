@@ -80,7 +80,7 @@ def format_csv(raw_csv_string: str) -> str:
             elif target_cols < num_cols:
                 row = row[:target_cols]
                 print(f"Warning: Ligne 1 tronquée (avait {num_cols} colonnes): {row}")
-            processed_rows[1] = rows[1] # Remplacer la ligne vide par la 2ème ligne de l'IA
+            processed_rows[1] = row # Remplacer la ligne vide par la 2ème ligne de l'IA
 
         for row in rows[3:]: # Traiter les lignes de données à partir de la 3ème ligne de l'IA
             if not any(field.strip() for field in row): # Ignorer lignes complètement vides
