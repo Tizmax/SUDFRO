@@ -4,6 +4,7 @@ debug/*
 uploads/*
 old/
 BLs/
+tests/
 MISTRAL_API_KEY.txt
 test.py
 history.json

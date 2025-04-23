@@ -40,8 +40,7 @@ def format_txt_from_csv(csv_content):
         NbColis = rows[i][3]
         poids = rows[i][4]
         quantite = rows[i][5]
-        unite = rows[i][6]
-        numLot = rows[i][7]
+        numLot = rows[i][6]
 
         refFournisseur = fill(refFournisseur, SPACE, 20)
         dateLimite = DDMMYYYY_to_YYYYMMDD(dateLimite)
@@ -51,11 +50,19 @@ def format_txt_from_csv(csv_content):
         else:
             p1, p2 = poids, '0'
         poids = fill(p1, '0', 4, left=True) + '.' + fill(p2, '0', 3)
-        if '.' in quantite:
-            q1, q2 = quantite.split('.')
+        if quantite == '' or float(quantite) == 0.0:
+            ## Si la quantité est vide ou nulle, on la remplace par le poids
+            quantite =  fill(p1, '0', 11, left=True) + '.' + fill(p2, '0', 3)
+            # Et l'unite devient KGM
+            unite = 'KGM'
         else:
-            q1, q2 = quantite, '0'
-        quantite =  fill(q1, '0', 11, left=True) + '.' + fill(q2, '0', 3)
+            ## Sinon on garde l'ancienne quantité (en PCE)
+            if '.' in quantite:
+                q1, q2 = quantite.split('.')
+            else:
+                q1, q2 = quantite, '0'
+            quantite =  fill(q1, '0', 11, left=True) + '.' + fill(q2, '0', 3)
+            unite = 'PCE'
         numLot = fill(numLot, SPACE, 20)
 
         formatted_lines.append(f"DPIDBX{SPACE * 39}CT{SPACE*2}{NbColis}{poids}{'0'*8}{numLot}{SPACE * 26}{dateLimite}")

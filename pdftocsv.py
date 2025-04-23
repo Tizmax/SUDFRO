@@ -13,7 +13,7 @@ with open('MISTRAL_API_KEY.txt', 'r') as file:
 client = Mistral(api_key)
 
 HEADER_LINE_1 = ["Nom du fournisseur", "Numéro Siret Fournisseur", "Numéro du BL fournisseur", "Référence de commande", "Date de livraison"] # 5 colonnes
-HEADER_LINE_3 = ["Référence fournisseur","Libellé du produit","DLC / DLUO / DLM","Nombre de colis","Poids net","Nombre de pièce","Unité","Numéro de Lot"] # 8 colonnes
+HEADER_LINE_3 = ["Référence fournisseur","Libellé du produit","DLC / DLUO / DLM","Nombre de colis","Poids net","Nombre de pièce","Numéro de Lot"] # 7 colonnes
 
 def extract_text_from_pdf(byte):
 
@@ -55,7 +55,7 @@ def format_csv(raw_csv_string: str) -> str:
     """
     Force la structure du CSV retourné par l'IA.
     - Impose les 3 premières lignes (en-têtes fixes).
-    - S'assure que les lignes de données (à partir de la 4ème) ont 8 colonnes.
+    - S'assure que les lignes de données (à partir de la 4ème) ont 7 colonnes.
     - Garantit un minimum de 3 lignes dans le résultat final.
     """
     processed_rows = [
