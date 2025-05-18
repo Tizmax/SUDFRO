@@ -107,6 +107,8 @@ def save_agents_data(agents_dict):
     with agents_lock:
         try:
             with open(AGENTS_FILE, 'w', encoding='utf-8') as f:
+                # trier les clés du dictionnaire avant de sauvegarder
+                agents_dict = dict(sorted(agents_dict.items()))
                 json.dump(agents_dict, f, indent=2, ensure_ascii=False) # Sauvegarder le dictionnaire
             return True
         except IOError as e:

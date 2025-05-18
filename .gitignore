@@ -8,3 +8,4 @@ tests/
 MISTRAL_API_KEY.txt
 test.py
 history.json
+agents.json
