@@ -2,10 +2,14 @@
 <html lang="fr">
 {% include 'head.html' %}
 <body>
-    <div class="container-debug">
+    <div id="loadingState" class="container-debug">
+        <h1>Traitement du fichier en cours...</h1>
+        <p>Veuillez patienter. L'éditeur CSV s'affichera automatiquement ici.</p>
+    </div>
+
+    <div id="editorState" class="container-debug" style="display: none;">
         <h1>Édition du CSV</h1>
 
-        <!-- Partie dynamique : Affichage du tableau de données modifiables -->
         <table class="table-style">
             <thead>
                 <tr id="headerRow"></tr>
@@ -20,9 +24,37 @@
     </div>
 
     <script>
-        let csvData = `{{ csv_content | safe }}`.trim();
+        const taskId = "{{ task_id }}";
+        const loadingDiv = document.getElementById('loadingState');
+        const editorDiv = document.getElementById('editorState');
 
-        generateTable(csvData);
+        function checkStatus() {
+            fetch(`/debug_status/${taskId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'finished') {
+                        loadingDiv.style.display = 'none';
+                        editorDiv.style.display = 'block';
+                        let csvData = data.result.trim();
+
+                        generateTable(csvData);
+
+                    } else if (data.status === 'failed') {
+                        loadingDiv.innerHTML = `<h2>Erreur lors du traitement</h2><p>${data.result}</p>`;
+                    } else {
+                        // Pas encore fini, on revérifie dans 2 secondes
+                        setTimeout(checkStatus, 2000);
+                    }
+                })
+                .catch(error => {
+                    loadingDiv.innerHTML = `<h2>Erreur</h2><p>Impossible de récupérer le statut de la tâche.</p>`;
+                    console.error("Erreur de fetch:", error);
+                });
+        }
+
+        // On lance la vérification dès que la page est prête
+        document.addEventListener('DOMContentLoaded', checkStatus);
+
     </script>
 </body>
 </html>

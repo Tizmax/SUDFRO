@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, render_template, redirect, url_for
 import os
 import time
 import threading
+import uuid
 import json
 from pdftocsv import generate_csv_from_pdf
 from csvtotxt import format_txt_from_csv
@@ -38,7 +39,7 @@ def clear_history():
     with history_lock:  # 🔒 Bloque l'accès à l'historique pendant l'écriture
         history = load_history()
 
-        # Garde seulement les fichiers qui ne sont PAS "done"
+        # Garde seulement les jobs qui ne sont PAS "done"
         history = [entry for entry in history if entry["status"] == "processing"]
 
         save_history(history)  # 📝 Sauvegarde le nouveau JSON
@@ -46,30 +47,31 @@ def clear_history():
     return jsonify({"success": True})
 
 
-def add_to_history(filename, status="processing"):
-    """Ajoute un fichier terminé à l'historique en évitant les problèmes de concurrence"""
+def add_to_history(job_id, filename, status="processing"):
+    """Ajoute un job à l'historique en évitant les problèmes de concurrence"""
     with history_lock:  # 🔒 Bloque l'accès à l'historique pendant l'écriture
 
         history = load_history()  # Charge l'historique actuel
 
-        # Vérifie si le fichier est déjà présent
+        # Vérifie si le job est déjà présent
         for entry in history:
-            if entry["filename"] == filename:
+            if entry["job_id"] == job_id:
                 if entry["status"] in ["done", "processing"]: 
                     return False # Ne rien faire si déjà présent 
                 else : # Si il y a eu une erreur on permet de recommencer
                     entry["status"] = status
+                    return True
 
-        history.append({"filename": filename, "status": status})  # Ajoute le fichier
+        history.append({"job_id": job_id, "filename": filename, "status": status})  # Ajoute le job
         save_history(history)  # Sauvegarde proprement
         return True
 
-def update_history_status(filename, new_status):
-    """Modifie le statut d'un fichier spécifique dans l'historique"""
+def update_history_status(job_id, new_status):
+    """Modifie le statut d'un job spécifique dans l'historique"""
     with history_lock:  # 🔒 Sécurise l'accès au fichier JSON
         history = load_history()  # Charge l'historique
         for entry in history:
-            if entry["filename"] == filename:
+            if entry["job_id"] == job_id:
                 entry["status"] = new_status  # 📝 Met à jour le statut
                 break
         save_history(history)  # Sauvegarde proprement
@@ -135,10 +137,10 @@ def upload_page():
     return render_template("upload.html")
 
 
-def process_file(filename, file_content):
+def process_file(task_id, filename, file_content):
     """ Fonction exécutée en arrière-plan pour traiter le fichier PDF """
     
-    add = add_to_history(filename)  # ⏳ Marque comme en cours
+    add = add_to_history(task_id, filename)  # ⏳ Marque comme en cours
     if not add:
         return
     try:
@@ -159,10 +161,10 @@ def process_file(filename, file_content):
         with open(txt_path, "w", encoding="utf-8") as f:
             f.write(txt_content)
 
-        update_history_status(filename, 'done')  # ✅ Marque comme terminé
+        update_history_status(task_id, 'done')  # ✅ Marque comme terminé
 
     except Exception as e:
-        update_history_status(filename, 'error') # ✅ Marque comme terminé
+        update_history_status(task_id, 'error') # ✅ Marque comme terminé
         print(f"Error processing file {filename}: {e}")
         
 
@@ -186,7 +188,9 @@ def upload_file():
         file_content = file.read() 
 
         # Lancement du traitement en arrière-plan (Thread)
-        threading.Thread(target=process_file, args=(filename, file_content)).start()
+        
+        task_id = str(uuid.uuid4())
+        threading.Thread(target=process_file, args=(task_id, filename, file_content)).start()
         time.sleep(3) # 🚨 Nécessaire pour ne pas surcharger l'API de requêtes
 
     
@@ -210,30 +214,64 @@ def debug_file():
     if file.filename == "" or not file.filename.lower().endswith(".pdf"):
         return "Fichier invalide", 400
     
-    # Choix du meilleur agent
-    agent_id = agentid_by_filename(file.filename)
+    filename = file.filename.replace(' ', '_')
+    file_content = file.read()
 
-    print(f"Agent ID trouvé pour {file.filename}: {agent_id}")
-    
-    generate_csv_from_pdf(file.read(), agent_id, debug=True)
+    task_id = str(uuid.uuid4())
+    threading.Thread(target=process_file, args=(task_id, filename, file_content)).start()
 
-    return redirect(url_for("debug_result_page"))
+    return redirect(url_for("debug_result_page", task_id=task_id))
 
 # ➡️ Page de résultat du Debug
 @app.route("/debug_result")
 def debug_result_page():
-    csv_file = "debug.csv"
+    task_id = request.args.get('task_id')
+    if not task_id:
+        return "ID de tâche manquant", 400
+        
+    return render_template("debug_result.html", task_id=task_id)
 
-    csv_content = ""
-
-    # Charger le contenu du CSV et TXT
-    try:
-        with open(os.path.join(DEBUG_FOLDER, csv_file), "r", encoding="utf-8") as f:
-            csv_content = f.read()
-    except:
-        csv_content = "Impossible de charger le fichier CSV."
-
-    return render_template("debug_result.html", csv_content=csv_content, csv_filename=csv_file)
+# ➡️ API pour vérifier le statut d'une tâche de debug
+@app.route("/debug_status/<task_id>")
+def debug_status(task_id):
+    """Vérifie le statut d'une tâche de debug spécifique"""
+    with history_lock:
+        history = load_history()
+        
+        # Chercher le job par son ID
+        for entry in history:
+            if entry["job_id"] == task_id:
+                if entry["status"] == "done":
+                    # Lire le contenu du fichier CSV de debug
+                    try:
+                        csv_path = os.path.join(DEBUG_FOLDER, "debug.csv")
+                        with open(csv_path, "r", encoding="utf-8") as f:
+                            csv_content = f.read()
+                        return jsonify({
+                            "status": "finished",
+                            "result": csv_content
+                        })
+                    except Exception as e:
+                        return jsonify({
+                            "status": "failed",
+                            "result": f"Erreur lors de la lecture du fichier: {str(e)}"
+                        })
+                elif entry["status"] == "error":
+                    return jsonify({
+                        "status": "failed", 
+                        "result": "Erreur lors du traitement du fichier"
+                    })
+                else:  # processing
+                    return jsonify({
+                        "status": "processing",
+                        "result": "Traitement en cours..."
+                    })
+        
+        # Si le job n'est pas trouvé
+        return jsonify({
+            "status": "failed",
+            "result": "Tâche introuvable"
+        })
 
 # 🔄️ Applique les modifications au fichier CSV
 @app.route("/update_csv", methods=["POST"])

@@ -43,13 +43,13 @@ async function submitForm(action) {
 
 // gestion de l'historique
 function fetchHistory() {
-    fetch("/get_history")  // 🔄 Récupère le JSON
+    fetch("/get_history")  // Récupère le JSON
         .then(response => response.json())
         .then(history => {
             const processingList = document.getElementById("processing-list");
             const doneList = document.getElementById("done-list");
 
-            processingList.innerHTML = ""; // 🔄 Nettoie la liste
+            processingList.innerHTML = ""; // Nettoie la liste
             doneList.innerHTML = "";
 
             history.forEach(entry => {
@@ -63,9 +63,9 @@ function fetchHistory() {
                     doneList.appendChild(listItem);
                 } else if (entry.status === "error") {
                     listItem.textContent = entry.filename + " ❌";
-                    listItem.title = "Erreur lors du traitement de ce fichier"; // 👈 Texte au survol
                     doneList.appendChild(listItem);
                 }
+                listItem.title = entry.job_id; // 👈 Texte au survol
 
             });
         })
@@ -74,11 +74,11 @@ function fetchHistory() {
 
 
 function clearDoneFiles() {
-    fetch("/clear_history", { method: "POST" })  // 🔄 Envoie la requête à Flask
+    fetch("/clear_history", { method: "POST" })  // Envoie la requête à Flask
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                fetchHistory(); // 🔄 Rafraîchit l'affichage après la suppression
+                fetchHistory(); // Rafraîchit l'affichage après la suppression
             }
         })
         .catch(error => console.error("Erreur lors de la suppression :", error));
