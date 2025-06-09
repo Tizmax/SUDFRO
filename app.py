@@ -137,7 +137,7 @@ def upload_page():
     return render_template("upload.html")
 
 
-def process_file(task_id, filename, file_content):
+def process_file(task_id, filename, file_content, debug=False):
     """ Fonction exécutée en arrière-plan pour traiter le fichier PDF """
     
     add = add_to_history(task_id, filename)  # ⏳ Marque comme en cours
@@ -150,16 +150,17 @@ def process_file(task_id, filename, file_content):
         print(f"Agent ID trouvé pour {filename}: {agent_id}")
 
         # Conversion PDF → CSV
-        csv_content = generate_csv_from_pdf(file_content, agent_id, debug=True)
+        csv_content = generate_csv_from_pdf(file_content, agent_id, debug)
 
-        # Conversion CSV → TXT
-        txt_content = format_txt_from_csv(csv_content)
+        if not debug:
+            # Conversion CSV → TXT
+            txt_content = format_txt_from_csv(csv_content)
 
-        # Sauvegarde du fichier TXT
-        txt_filename = filename.replace(".pdf", ".txt").replace(".PDF", ".txt")
-        txt_path = os.path.join(UPLOAD_FOLDER, txt_filename)
-        with open(txt_path, "w", encoding="utf-8") as f:
-            f.write(txt_content)
+            # Sauvegarde du fichier TXT
+            txt_filename = filename.replace(".pdf", ".txt").replace(".PDF", ".txt")
+            txt_path = os.path.join(UPLOAD_FOLDER, txt_filename)
+            with open(txt_path, "w", encoding="utf-8") as f:
+                f.write(txt_content)
 
         update_history_status(task_id, 'done')  # ✅ Marque comme terminé
 
@@ -218,7 +219,7 @@ def debug_file():
     file_content = file.read()
 
     task_id = str(uuid.uuid4())
-    threading.Thread(target=process_file, args=(task_id, filename, file_content)).start()
+    threading.Thread(target=process_file, args=(task_id, filename, file_content, True)).start()
 
     return redirect(url_for("debug_result_page", task_id=task_id))
 
