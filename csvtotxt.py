@@ -19,7 +19,7 @@ def format_txt_from_csv(csv_content):
     dateBL = rows[1][4]
 
     ## Formatage des données de l'en-tête
-    numBL = fill(numBL, SPACE, 10)
+    numBL = fill(numBL, SPACE, 41)
     dateBL = DDMMYYYY_to_YYYYMMDD(dateBL)
 
     ## Création de l'en-tête
@@ -27,7 +27,7 @@ def format_txt_from_csv(csv_content):
     formatted_lines.append("HGEN")
     formatted_lines.append(f"HPTYDP{SPACE}{GLN}")
     formatted_lines.append(f"HREFON{SPACE}{numCommande}")
-    formatted_lines.append(f"HREFDQ{SPACE}{numBL}{SPACE * 31}{dateBL}")
+    formatted_lines.append(f"HREFDQ{SPACE}{numBL}{dateBL}")
     formatted_lines.append("HDELLIV")
 
     ## Itération sur les articles
