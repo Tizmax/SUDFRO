@@ -67,6 +67,7 @@ def format_txt_from_csv(csv_content):
 
         formatted_lines.append(f"DPIDBX{SPACE * 39}CT{SPACE*2}{NbColis}{poids}{'0'*8}{numLot}{SPACE * 26}{dateLimite}")
         formatted_lines.append(f"DART000001{SPACE*3}{refFournisseur}{SPACE * 56}{quantite}{SPACE*3}{unite}")
+        formatted_lines.append("")
 
     return "\n".join(formatted_lines) 
 
